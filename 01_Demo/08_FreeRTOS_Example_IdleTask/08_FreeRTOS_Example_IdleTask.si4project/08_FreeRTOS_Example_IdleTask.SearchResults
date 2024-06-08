@@ -1,0 +1,13 @@
+---- configUSE_IDLE_HOOK Matches (12 in 11 files) ----
+FreeRTOS.h (FreeRTOS\Source\include) line 99 : #ifndef configUSE_IDLE_HOOK
+FreeRTOS.h (FreeRTOS\Source\include) line 100 :     #error Missing definition:  configUSE_IDLE_HOOK must be defined in FreeRTOSConfig.h as either 1 or 0.  See the Configuration section of the FreeRTOS API documentation for details.
+FreeRTOSConfig.h (FreeRTOS\Demo\CORTEX_STM32F103_Keil) line 44 : #define configUSE_IDLE_HOOK			0
+FreeRTOSConfig.h (FreeRTOS\Test\CBMC\patches) line 72 : #define configUSE_IDLE_HOOK                1
+FreeRTOSConfig.h (FreeRTOS\Test\CMock\config) line 46 : #define configUSE_IDLE_HOOK                              1
+FreeRTOSConfig.h (FreeRTOS\Test\CMock\queue\dynamic) line 46 : #define configUSE_IDLE_HOOK                              1
+FreeRTOSConfig.h (FreeRTOS\Test\CMock\queue\generic) line 46 : #define configUSE_IDLE_HOOK                              1
+FreeRTOSConfig.h (FreeRTOS\Test\CMock\queue\semaphore) line 46 : #define configUSE_IDLE_HOOK                              1
+FreeRTOSConfig.h (FreeRTOS\Test\CMock\queue\sets) line 46 : #define configUSE_IDLE_HOOK                              1
+FreeRTOSConfig.h (FreeRTOS\Test\CMock\queue\static) line 46 : #define configUSE_IDLE_HOOK                              1
+FreeRTOSConfig.h (FreeRTOS\Test\CMock\queue\tracing) line 46 : #define configUSE_IDLE_HOOK                              1
+portTASK_FUNCTION in tasks.c (FreeRTOS\Source) :         #if ( configUSE_IDLE_HOOK == 1 )

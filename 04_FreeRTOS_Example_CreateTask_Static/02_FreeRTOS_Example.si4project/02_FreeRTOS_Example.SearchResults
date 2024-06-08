@@ -1,4 +1,0 @@
----- prvConfigureLCD Matches (3 in 1 files) ----
-main.c (FreeRTOS\Demo\CORTEX_STM32F103_Keil) line 134 : static void prvConfigureLCD( void );
-vLCDTask in main.c (FreeRTOS\Demo\CORTEX_STM32F103_Keil) : 	prvConfigureLCD();
-main.c (FreeRTOS\Demo\CORTEX_STM32F103_Keil) line 355 : static void prvConfigureLCD( void )

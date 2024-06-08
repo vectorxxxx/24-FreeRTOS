@@ -1,0 +1,42 @@
+[Signal 1]
+DispName=task1flagrun
+PlotType=1
+Color=255
+ValHex=0
+MinDec=0
+MinVal=2147483648.
+MaxDec=0
+MaxVal=2147483647.
+Mask=-1
+Offset=0
+Adaptive=0
+DispNumber=1
+HeightFactor=0.33333333333333337034
+[Signal 2]
+DispName=task2flagrun
+PlotType=1
+Color=32768
+ValHex=0
+MinDec=0
+MinVal=2147483648.
+MaxDec=0
+MaxVal=2147483647.
+Mask=-1
+Offset=0
+Adaptive=0
+DispNumber=2
+HeightFactor=0.33333333333333337034
+[Signal 3]
+DispName=task3flagrun
+PlotType=1
+Color=8388608
+ValHex=0
+MinDec=0
+MinVal=2147483648.
+MaxDec=0
+MaxVal=2147483647.
+Mask=-1
+Offset=0
+Adaptive=0
+DispNumber=3
+HeightFactor=0.33333333333333331483
