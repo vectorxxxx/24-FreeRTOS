@@ -1,0 +1,4 @@
+---- vApplicationGetIdleTaskMemory Matches (3 in 2 files) ----
+task.h (FreeRTOS\Source\include) line 1644 :      * <pre>void vApplicationGetIdleTaskMemory( StaticTask_t ** ppxIdleTaskTCBBuffer, StackType_t ** ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize ) </pre>
+task.h (FreeRTOS\Source\include) line 1653 :     void vApplicationGetIdleTaskMemory( StaticTask_t ** ppxIdleTaskTCBBuffer,
+vTaskStartScheduler in tasks.c (FreeRTOS\Source) :             vApplicationGetIdleTaskMemory( &pxIdleTaskTCBBuffer, &pxIdleTaskStackBuffer, &ulIdleTaskStackSize );
