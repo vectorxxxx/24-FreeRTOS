@@ -141,7 +141,9 @@ int fputc( int ch, FILE *f );
 extern void vSetupTimerTest( void );
 
 /*-----------------------------------------------------------*/
-TaskHandle_t xHandleTask1;
+TaskHandle_t xHandleTask1; // 任务1的句柄
+TaskHandle_t xHandleTask3; // 任务3的句柄
+
 
 static int task1flagrun = 0;
 static int task2flagrun = 0;
@@ -149,12 +151,24 @@ static int task3flagrun = 0;
 
 void Task1Function( void * param)
 {
+	int i;
+	// 栈是从高位往低位分配的，故意设置超出栈的大小，以测试程序是否会因任务的结构遭破坏而崩溃
+	// volatile 作用是防止被编译器优化，起到预计效果
+	// 进入debug模式后，观察是否输出一段时间就会停止的现象
+	volatile char buf[100 * 5]; 
+	
 	while(1) 
 	{
 		task1flagrun = 1;
 		task2flagrun = 0;
 		task3flagrun = 0;
 		printf("1");
+
+		// 在超出 100 * 4 大小后，栈会继续往低位分配内存，这样会破坏 TCB 和 Stack 的结构和头信息
+		for (i = 0; i < 500; i++)
+		{
+			buf[i] = 0;
+		}
 	}
 }
 
@@ -236,7 +250,7 @@ int main( void )
     // 2、优先级高的先执行，同优先级的交替执行
 	xTaskCreate(Task1Function, "Task1", 100, NULL, 1, &xHandleTask1);
 	xTaskCreate(Task2Function, "Task2", 100, NULL, 1, NULL);
-	xTaskCreateStatic(Task3Function, "Task3", 100, NULL, 1, xTask3Stack, &xTask3TCB);
+	xHandleTask3 = xTaskCreateStatic(Task3Function, "Task3", 100, NULL, 1, xTask3Stack, &xTask3TCB);
 	
     // 使用同一函数创建任务
     // （void *）是一种通用指针类型，可以用来存储任何类型的指针
