@@ -72,8 +72,13 @@ static byte platformX;
 static uint32_t g_xres, g_yres, g_bpp;
 static uint8_t *g_framebuffer;
 
-/* 声明队列 */
+/* 挡球板队列 */
 QueueHandle_t g_xQueuePlatform;
+/* 旋转编码器队列 */
+QueueHandle_t g_xQueueRotary;
+
+static uint8_t g_ucQueueRotaryBuf[10 * sizeof(struct rotary_data)];
+static StaticQueue_t  g_xQueueRotaryStaticStruct;
 
 /* 挡球板任务 */
 static void platform_task(void *params)
@@ -90,50 +95,77 @@ static void platform_task(void *params)
     {
         /* 读取红外遥控器 */
 //		if (0 == IRReceiver_Read(&dev, &data))  // 无阻塞，效率低
-        if (pdPASS == xQueueReceive(g_xQueuePlatform, &idata, portMAX_DELAY))   // 有阻塞，效率高
-		{
-            data = idata.val;
-            if (data == 0x00)
-            {
-                data = last_data;
-            }
-            
-            if (data == 0xe0) /* Left */
-            {
-                btnLeft();
-            }
+        xQueueReceive(g_xQueuePlatform, &idata, portMAX_DELAY);   // 有阻塞，效率高
+        
+        uptMove = idata.val;
+        
+        // Hide platform
+        draw_bitmap(platformXtmp, g_yres - 8, clearImg, 12, 8, NOINVERT, 0);
+        draw_flushArea(platformXtmp, g_yres - 8, 12, 8);
+        
+        // Move platform
+        if(uptMove == UPT_MOVE_RIGHT)
+            platformXtmp += 3;
+        else if(uptMove == UPT_MOVE_LEFT)
+            platformXtmp -= 3;
+        uptMove = UPT_MOVE_NONE;
+        
+        // Make sure platform stays on screen
+        if(platformXtmp > 250)
+            platformXtmp = 0;
+        else if(platformXtmp > g_xres - PLATFORM_WIDTH)
+            platformXtmp = g_xres - PLATFORM_WIDTH;
+        
+        // Draw platform
+        draw_bitmap(platformXtmp, g_yres - 8, platform, 12, 8, NOINVERT, 0);
+        draw_flushArea(platformXtmp, g_yres - 8, 12, 8);
+        
+        platformX = platformXtmp;
+    }
+}
 
-            if (data == 0x90)  /* Right */
-            {
-                btnRight();
-            }
-            last_data = data;
-
-            
-            // Hide platform
-            draw_bitmap(platformXtmp, g_yres - 8, clearImg, 12, 8, NOINVERT, 0);
-            draw_flushArea(platformXtmp, g_yres - 8, 12, 8);
-            
-            // Move platform
-            if(uptMove == UPT_MOVE_RIGHT)
-                platformXtmp += 3;
-            else if(uptMove == UPT_MOVE_LEFT)
-                platformXtmp -= 3;
-            uptMove = UPT_MOVE_NONE;
-            
-            // Make sure platform stays on screen
-            if(platformXtmp > 250)
-                platformXtmp = 0;
-            else if(platformXtmp > g_xres - PLATFORM_WIDTH)
-                platformXtmp = g_xres - PLATFORM_WIDTH;
-            
-            // Draw platform
-            draw_bitmap(platformXtmp, g_yres - 8, platform, 12, 8, NOINVERT, 0);
-            draw_flushArea(platformXtmp, g_yres - 8, 12, 8);
-            
-            platformX = platformXtmp;
-            
-		}
+static void RotaryEncoderTask(void *params)
+{
+    struct rotary_data rdata;
+    struct input_data idata;
+    int left, i, cnt;
+    
+    while(1)
+    {
+        /* 读取旋转编码器队列 */
+        xQueueReceive(g_xQueueRotary, &rdata, portMAX_DELAY);
+        
+        /* 处理数据 */
+        if (rdata.speed < 0)
+        {
+            left = 1;
+            rdata.speed = 0 - rdata.speed;
+        }
+        else 
+        {
+            left = 0;
+        }
+        
+        if (rdata.speed > 100)
+        {
+            cnt = 4;
+        }
+        else if (rdata.speed > 50)
+        {
+            cnt = 2;
+        }
+        else 
+        {
+            cnt = 1;
+        }
+        
+        /* 写入挡球板队列 */      
+        idata.dev = 1;
+        idata.val = left ? UPT_MOVE_LEFT : UPT_MOVE_RIGHT;
+        for(i = 0; i < cnt; i++)
+        {
+            xQueueSend(g_xQueuePlatform, &idata, 0);
+        }
     }
 }
 
@@ -148,6 +180,10 @@ void game1_task(void *params)
     
     /* 创建队列 */
     g_xQueuePlatform = xQueueCreate(10, sizeof(struct input_data));
+    g_xQueueRotary = xQueueCreateStatic(10, sizeof(struct rotary_data), g_ucQueueRotaryBuf, &g_xQueueRotaryStaticStruct);
+    
+    /* 旋转编码器任务 */
+    xTaskCreate(RotaryEncoderTask, "RotaryEncoderTask", 128, NULL, osPriorityNormal, NULL);
     
 	uptMove = UPT_MOVE_NONE;
 
@@ -166,6 +202,7 @@ void game1_task(void *params)
 	score = 0;
 	platformX = (g_xres / 2) - (PLATFORM_WIDTH / 2);
 
+    /* 挡球板任务 */
     xTaskCreate(platform_task, "platform_task", 128, NULL, osPriorityNormal, NULL);
 
     while (1)

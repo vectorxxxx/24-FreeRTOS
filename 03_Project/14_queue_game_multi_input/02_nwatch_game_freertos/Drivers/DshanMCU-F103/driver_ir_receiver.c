@@ -26,6 +26,7 @@ static int g_KeysBuf_R, g_KeysBuf_W;
 
 static uint64_t g_IRReceiverIRQ_Timers[68];
 static int g_IRReceiverIRQ_Cnt = 0;
+static uint32_t g_last_val;
 
 /* 声明外部队列 */
 extern QueueHandle_t g_xQueuePlatform;
@@ -173,8 +174,15 @@ static int IRReceiver_IRQTimes_Parse(void)
 
 	//PutKeyToBuf(datas[0]);
 	//PutKeyToBuf(datas[2]);
+    /* 写队列 */
     idata.dev = datas[0];
-    idata.val = datas[2];
+    if (datas[2] == 0xe0)
+        idata.val = UPT_MOVE_LEFT;
+    else if (datas[2] == 0x90)
+        idata.val = UPT_MOVE_RIGHT;
+    else 
+        idata.val = UPT_MOVE_NONE;
+    g_last_val = idata.val;
     xQueueSendToBackFromISR(g_xQueuePlatform, &idata, NULL);
     return 0;
 }
@@ -253,7 +261,7 @@ void IRReceiver_IRQ_Callback(void)
 			//PutKeyToBuf(0);
 			//PutKeyToBuf(0);
             idata.dev = 0;
-            idata.val = 0;
+            idata.val = g_last_val;
             xQueueSendToBackFromISR(g_xQueuePlatform, &idata, NULL);
 			g_IRReceiverIRQ_Cnt = 0;
 		}

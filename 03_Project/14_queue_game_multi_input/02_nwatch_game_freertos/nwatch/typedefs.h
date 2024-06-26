@@ -16,10 +16,20 @@ typedef uint8_t byte;
 typedef uint16_t uint;
 typedef uint32_t ulong;
 
+#define UPT_MOVE_NONE	0
+#define UPT_MOVE_RIGHT	1
+#define UPT_MOVE_LEFT	2
+
 /* 声明结构体 */
 struct input_data {
     uint32_t dev;
-    uint32_t val;
+    uint32_t val;    /* 0:UPT_MOVE_NONE  1:UPT_MOVE_RIGHT  2:UPT_MOVE_LEFT */
+};
+
+/* 旋转编码器结构体 */
+struct rotary_data {
+    int32_t cnt;
+    int32_t speed;
 };
 
 #define PROGMEM

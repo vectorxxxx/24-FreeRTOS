@@ -15,6 +15,9 @@
 #include "driver_timer.h"
 #include "stm32f1xx_hal.h"
 #include "tim.h"
+#include "FreeRTOS.h"
+#include "typedefs.h"
+#include "queue.h"
 
 /*
  * PB12 - S1
@@ -32,6 +35,8 @@
 
 static int32_t g_count = 0;
 static int32_t g_speed = 0; /* 速度(正数表示顺时针旋转,负数表示逆时针旋转,单位:每秒转动次数) */
+
+extern QueueHandle_t g_xQueueRotary;
 
 /**********************************************************************
  * 函数名称： RotaryEncoder_Get_Key
@@ -102,6 +107,7 @@ void RotaryEncoder_IRQ_Callback(void)
 {
     uint64_t time;
     static uint64_t pre_time = 0;
+    struct rotary_data rdata;
         
 	/* 1. 记录中断发生的时刻 */	
 	time = system_get_ns();
@@ -109,7 +115,13 @@ void RotaryEncoder_IRQ_Callback(void)
     /* 上升沿触发: 必定是高电平 
      * 防抖
      */
-    mdelay(2);
+    //mdelay(2); 
+    // 上面延迟防不了抖动，需要改造
+    if (time - pre_time < 2000000)
+    {
+        // 2ms内认为是抖动
+        return;
+    }
     if (!RotaryEncoder_Get_S1())
         return;
 
@@ -117,6 +129,10 @@ void RotaryEncoder_IRQ_Callback(void)
      * S2为0表示逆时针转, 为1表示顺时针转
      */
     g_speed = (uint64_t)1000000000/(time - pre_time);
+    if (g_speed == 0)
+    {
+        g_speed = 1;
+    }
     if (RotaryEncoder_Get_S2())
     {
         g_count++;
@@ -127,7 +143,11 @@ void RotaryEncoder_IRQ_Callback(void)
         g_speed = 0 - g_speed;
     }
     pre_time = time;
-        
+    
+    /* 写队列 */
+    rdata.cnt = g_count;
+    rdata.speed = g_speed;
+    xQueueSendToBackFromISR(g_xQueueRotary, &rdata, NULL);
 }
 
 
